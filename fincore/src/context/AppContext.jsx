@@ -6,16 +6,23 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
   const [role, setRole] = useState("Admin");
   const [darkMode, setDarkMode] = useState(false);
+
   const [allTransactions, setAllTransactions] = useState(() => {
-    const saved = localStorage.getItem("fincore_transactions");
-    return saved ? JSON.parse(saved) : transactions;
+    try {
+      const saved = localStorage.getItem("fincore_transactions");
+      return saved ? JSON.parse(saved) : transactions;
+    } catch {
+      return transactions;
+    }
   });
+
   const [filters, setFilters] = useState({
     search: "",
     type: "all",
     category: "all",
   });
 
+  // ✅ Sync to localStorage whenever transactions change
   useEffect(() => {
     localStorage.setItem(
       "fincore_transactions",
@@ -23,6 +30,7 @@ export const AppProvider = ({ children }) => {
     );
   }, [allTransactions]);
 
+  // ✅ Sync dark mode class
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -31,18 +39,24 @@ export const AppProvider = ({ children }) => {
     }
   }, [darkMode]);
 
+  // ✅ Fixed addTransaction — adds to TOP of list with unique id
   const addTransaction = (tx) => {
-    setAllTransactions((prev) => [{ ...tx, id: Date.now() }, ...prev]);
+    const newTx = {
+      ...tx,
+      id: Date.now(),
+      amount: Number(tx.amount),
+    };
+    setAllTransactions((prev) => [newTx, ...prev]);
   };
 
-  // Summary calculations
+  // ✅ Summary calculations — recalculate live from allTransactions
   const totalIncome = allTransactions
     .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const totalExpenses = allTransactions
     .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const totalBalance = totalIncome - totalExpenses;
   const burnRate = Math.round(totalExpenses / 6);

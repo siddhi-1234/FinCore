@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { useApp } from "../context/AppContext";
 import SummaryCard from "../components/SummaryCard";
 import { monthlyData, categoryData } from "../data/mockTransactions";
@@ -32,6 +33,16 @@ const CustomTooltip = ({ active, payload, label }) => {
     );
   }
   return null;
+};
+
+const containerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
 const Dashboard = () => {
@@ -95,26 +106,45 @@ const Dashboard = () => {
   const gridColor = darkMode ? "#374151" : "#E5E7EB";
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Page Title */}
-      <div>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-4 md:space-y-6"
+    >
+      {/* Title */}
+      <motion.div variants={itemVariants}>
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
           Dashboard Overview
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Track your business financials at a glance
         </p>
-      </div>
+      </motion.div>
 
-      {/* Summary Cards — 1 col mobile, 2 col tablet, 4 col desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-        {summaryCards.map((card) => (
-          <SummaryCard key={card.title} {...card} />
+      {/* Summary Cards */}
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4"
+      >
+        {summaryCards.map((card, i) => (
+          <motion.div
+            key={card.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.08 }}
+            whileHover={{ y: -3, transition: { duration: 0.2 } }}
+          >
+            <SummaryCard {...card} />
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Charts — stacked on mobile, side by side on desktop */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      {/* Charts */}
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 xl:grid-cols-3 gap-4"
+      >
         {/* Line Chart */}
         <div className="xl:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-5">
           <h2 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white mb-4">
@@ -219,45 +249,55 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Quick Insights */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-5">
+      <motion.div
+        variants={itemVariants}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 md:p-5"
+      >
         <h2 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white mb-4">
           Quick Insights
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              Highest Spend Category
-            </p>
-            <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
-              {highestCategory.name} (${highestCategory.value.toLocaleString()})
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              MoM Growth
-            </p>
-            <p
-              className={`text-sm md:text-base font-semibold
-              ${parseFloat(momGrowth) >= 0 ? "text-green-500" : "text-red-500"}`}
+          {[
+            {
+              label: "Highest Spend Category",
+              value: `${highestCategory.name} ($${highestCategory.value.toLocaleString()})`,
+              color: "text-gray-900 dark:text-white",
+            },
+            {
+              label: "MoM Growth",
+              value: `${momGrowth > 0 ? "+" : ""}${momGrowth}%`,
+              color:
+                parseFloat(momGrowth) >= 0 ? "text-green-500" : "text-red-500",
+            },
+            {
+              label: "Profit Margin",
+              value: `${profitMargin}%`,
+              color: "text-gray-900 dark:text-white",
+            },
+          ].map((insight, i) => (
+            <motion.div
+              key={insight.label}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 + i * 0.1 }}
+              className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4"
             >
-              {momGrowth > 0 ? "+" : ""}
-              {momGrowth}%
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              Profit Margin
-            </p>
-            <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
-              {profitMargin}%
-            </p>
-          </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                {insight.label}
+              </p>
+              <p
+                className={`text-sm md:text-base font-semibold ${insight.color}`}
+              >
+                {insight.value}
+              </p>
+            </motion.div>
+          ))}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

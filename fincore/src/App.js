@@ -1,32 +1,38 @@
 import React, { useState } from "react";
-import { AppProvider } from "./context/AppContext";
+import { AppProvider, useApp } from "./context/AppContext";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import Dashboard from "./pages/Dashboard";
-import { useApp } from "./context/AppContext";
+import Transactions from "./pages/Transactions";
+import Insights from "./pages/Insights";
+import { AnimatePresence, motion } from "framer-motion";
 
 function AppContent() {
   const [activePage, setActivePage] = useState("dashboard");
   const { darkMode } = useApp();
 
   return (
-    <div className={`min-h-screen ${darkMode ? "bg-gray-950" : "bg-gray-100"}`}>
+    <div
+      className={`min-h-screen ${darkMode ? "bg-gray-950 text-white" : "bg-gray-100 text-gray-900"}`}
+    >
       <Sidebar activePage={activePage} setActivePage={setActivePage} />
-      <Header />
+      <Header activePage={activePage} />
 
-      {/* ml-0 on mobile (no sidebar), ml-60 on desktop */}
-      <main className="ml-0 md:ml-60 pt-14 p-4 md:p-6 min-h-screen">
-        {activePage === "dashboard" && <Dashboard />}
-        {activePage === "transactions" && (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400 text-lg">Transactions — Coming Day 2</p>
-          </div>
-        )}
-        {activePage === "insights" && (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400 text-lg">Insights — Coming Day 2</p>
-          </div>
-        )}
+      {/* pt-20 gives enough room below fixed header */}
+      <main className="ml-0 md:ml-60 pt-20 px-4 pb-6 md:px-6 min-h-screen">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activePage}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+          >
+            {activePage === "dashboard" && <Dashboard />}
+            {activePage === "transactions" && <Transactions />}
+            {activePage === "insights" && <Insights />}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );
